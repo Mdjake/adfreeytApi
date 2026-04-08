@@ -6,6 +6,15 @@ from flask import Flask, Response, jsonify, request
 app = Flask(__name__)
 CHUNK_SIZE = 1024 * 64
 
+# write cookies from Render env variable to temp file
+cookies_content = os.environ.get('COOKIES_CONTENT')
+if cookies_content:
+    with open('/tmp/cookies.txt', 'w') as f:
+        f.write(cookies_content)
+    COOKIES_PATH = '/tmp/cookies.txt'
+else:
+    COOKIES_PATH = None
+
 def get_best_format(formats):
     best = None
     for f in formats:
@@ -29,6 +38,8 @@ def extract_info(youtube_url):
         'no_warnings': True,
         'noplaylist': True,
     }
+    if COOKIES_PATH:
+        ydl_opts['cookiefile'] = COOKIES_PATH
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(youtube_url, download=False)
         best = get_best_format(info.get('formats', []))
