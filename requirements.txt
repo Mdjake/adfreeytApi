@@ -1,3 +1,4 @@
+fastapi
+uvicorn
 yt-dlp
-flask
-requests
+pycryptodomex
