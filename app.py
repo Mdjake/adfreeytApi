@@ -1,32 +1,51 @@
-from fastapi import FastAPI, Query, HTTPException
+from fastapi import FastAPI, HTTPException
 import httpx
+from pydantic import BaseModel
+from typing import Dict, Any
 
-app = FastAPI()
+app = FastAPI(title="Telegram ID to Number Proxy API")
 
-# Original API configuration
-ORIGINAL_API_URL = "https://noobster-api-5xii.onrender.com/search"
-ORIGINAL_API_KEY = "mr_noobster"
+class ResponseModel(BaseModel):
+    success: bool
+    user_id: str
+    country: str
+    country_code: str
+    number: str
+    developer: str
 
-@app.get("/search")
-async def search_phone(mobile: str = Query(...)):
-    try:
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.get(
-                ORIGINAL_API_URL,
-                params={"mobile": mobile, "key": ORIGINAL_API_KEY}
-            )
-            response.raise_for_status()
-            original_data = response.json()
-        
-        # Extract only what we need and rename
-        results = original_data.get("results", {}).get("results", {})
-        
-        return {
-            "number": results.get("n"),
-            "country": results.get("c"),
-            "country_code": results.get("cc"),
-            "developer": "@i_AmAnanya"
-        }
+@app.get("/api", response_model=ResponseModel)
+async def get_user_number(userid: str):
+    target_url = "https://wasifali-telegram-id-to-number.vercel.app/api"
     
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.get(target_url, params={"userid": userid})
+            response.raise_for_status()
+            data = response.json()
+        except httpx.RequestError as e:
+            raise HTTPException(status_code=502, detail=f"Proxy request failed: {str(e)}")
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
+    
+    # Validate required fields exist
+    required_fields = ["success", "user_id", "country", "country_code", "number"]
+    for field in required_fields:
+        if field not in data:
+            raise HTTPException(status_code=502, detail=f"Missing field from upstream API: {field}")
+    
+    # Construct new response (keep first 5 fields, replace developer)
+    filtered_data = {
+        "success": data["success"],
+        "user_id": data["user_id"],
+        "country": data["country"],
+        "country_code": data["country_code"],
+        "number": data["number"],
+        "developer": "@i_amAnanya"   # Your custom value
+    }
+    
+    return filtered_data
+
+# Optional: Root endpoint for health check
+@app.get("/")
+async def root():
+    return {"message": "Telegram ID to Number Proxy API is running", "usage": "/api?userid=<telegram_user_id>"}
