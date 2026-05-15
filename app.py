@@ -2,8 +2,13 @@ from fastapi import FastAPI, HTTPException
 import httpx
 from pydantic import BaseModel
 from typing import Dict, Any
+import os
 
 app = FastAPI(title="Telegram ID to Number Proxy API")
+
+# ========== ADDED: API Key System ==========
+PROXY_API_KEY = os.getenv('TELEGRAM_PROXY_API_KEY', 'TELEGRAM-PROXY-KEY-2024')
+# ===========================================
 
 class ResponseModel(BaseModel):
     success: bool
@@ -14,7 +19,12 @@ class ResponseModel(BaseModel):
     developer: str
 
 @app.get("/api", response_model=ResponseModel)
-async def get_user_number(userid: str):
+async def get_user_number(userid: str, api_key: str):  # CHANGED: Added api_key parameter
+    # ========== ADDED: API Key Validation ==========
+    if api_key != PROXY_API_KEY:
+        raise HTTPException(status_code=403, detail="Invalid API key")
+    # ==============================================
+    
     target_url = "https://wasifali-telegram-id-to-number.vercel.app/api"
     
     async with httpx.AsyncClient() as client:
