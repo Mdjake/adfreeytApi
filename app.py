@@ -7,7 +7,7 @@ import os
 app = FastAPI(title="Telegram ID to Number Proxy API")
 
 # ========== ADDED: API Key System ==========
-PROXY_API_KEY = os.getenv('TELEGRAM_PROXY_API_KEY', 'TELEGRAM-PROXY-KEY-2024')
+PROX_API_KEY = os.getenv('TELEGRAM_PROXY_API_KEY', 'TELEGRAM-PROXY-KEY-2024')
 # ===========================================
 
 class ResponseModel(BaseModel):
