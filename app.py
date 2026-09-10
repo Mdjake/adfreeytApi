@@ -58,4 +58,4 @@ async def get_user_number(userid: str, api_key: str):  # CHANGED: Added api_key 
 # Optional: Root endpoint for health check
 @app.get("/")
 async def root():
-    return {"message": "Telegram ID to Number Proxy API is running", "usage": "/api?userid=<telegram_user_id>"}
+    return {"message": "Telegram ID to Number Proxy API is running", "usage": "/api?userid=<telegram_user_id>"
